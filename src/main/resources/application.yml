@@ -1,0 +1,12 @@
+server:
+  port: 8080
+spring:
+  mvc:
+    view:
+      prefix: classpath:/templates/
+      suffix: .html
+  datasource:
+    driver-class-name: org.mariadb.jdbc.Driver
+    url: jdbc:mariadb://127.0.0.1:3306/exam_lyj_24_11?useUnicode=true&characterEncoding=utf8&autoReconnect=true&serverTimezone=Asia/Seoul
+    username: root
+    password:

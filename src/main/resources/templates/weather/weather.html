@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>날씨 정보 앱</title>
+
+  <!-- jQuery, jQuery UI 및 폰트어썸 -->
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/daisyui@2.15.2/dist/full.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+
+</head>
+
+<body>
+
+<!-- 상단 메뉴 -->
+<div class="fixed top-0 left-0 w-full bg-gray-800 text-white shadow-md z-10">
+  <div class="container mx-auto flex justify-between items-center py-3 px-5">
+    <!-- LOGO 버튼 -->
+    <a href="/faq" class="text-xl font-bold text-white hover:text-gray-300">LOGO</a>
+
+    <!-- 메뉴 링크 -->
+    <div class="space-x-4">
+      <a href="/faq" class="text-white hover:text-gray-300">FAQ</a>
+      <a href="/weather" class="text-white hover:text-gray-300">WEATHER</a>
+    </div>
+  </div>
+</div>
+
+<!-- 아래의 여백으로 컨텐츠 상단이 가려지지 않도록 조정 -->
+<div class="pt-24"></div>
+
+<!-- 날씨 조회 폼 -->
+<div class="container mx-auto mt-10 p-8 bg-white rounded-lg shadow-md text-center max-w-md">
+  <h1 class="text-2xl font-bold mb-6">날씨 정보 조회</h1>
+  <input type="text" id="cityInput" placeholder="도시 이름을 입력하세요"
+         class="input input-bordered w-full p-2 border border-gray-300 rounded-md mb-4 text-gray-700"/>
+  <button id="getWeatherBtn" class="btn btn-primary w-full bg-blue-500 hover:bg-blue-700 text-white font-semibold py-2 rounded-md">조회</button>
+
+  <!-- 날씨 정보 표시 영역 -->
+  <div id="weatherInfo" class="weather-info mt-6 text-left"></div>
+</div>
+
+<script type="text/javascript">
+  const apiKey = 'your_API_key';
+
+  $(document).ready(function () {
+    $('#getWeatherBtn').click(function () {
+      getWeatherByCityName();
+    });
+
+    $('#cityInput').keyup(function (event) {
+      if (event.key === "Enter") {
+        getWeatherByCityName();
+      }
+    });
+
+    setInterval(getWeatherByCityName, 600000);
+  });
+
+  function getWeatherByCityName() {
+    const city = $('#cityInput').val();
+    if (!city) {
+      alert("도시 이름을 입력하세요.");
+      return;
+    }
+
+    $.ajax({
+      url: 'https://api.openweathermap.org/geo/1.0/direct?q=' + city + '&limit=1&appid=' + apiKey,
+      type: 'GET',
+      dataType: 'json',
+      success: function (data) {
+        if (data.length > 0) {
+          const lat = data[0].lat;
+          const lon = data[0].lon;
+          getWeatherByCoordinates(lat, lon, city);
+        } else {
+          alert("해당 도시를 찾을 수 없습니다.");
+        }
+      },
+      error: function (error) {
+        console.error("Error fetching coordinates:", error);
+        alert("도시 정보를 가져오는 데 실패했습니다.");
+      }
+    });
+  }
+
+  function getWeatherByCoordinates(lat, lon, cityName) {
+    $.ajax({
+      url: 'https://api.openweathermap.org/data/2.5/weather?lat=' + lat + '&lon=' + lon + '&appid=' + apiKey + '&units=metric&lang=kr',
+      type: 'GET',
+      dataType: 'json',
+      success: function (data) {
+        if (data.cod === 200) {
+          displayWeather(data, cityName);
+        } else {
+          alert("날씨 정보를 찾을 수 없습니다.");
+        }
+      },
+      error: function (error) {
+        console.error("Error fetching weather data:", error);
+        alert("날씨 데이터를 가져오는 데 실패했습니다.");
+      }
+    });
+  }
+
+  function getCurrentTime() {
+    const now = new Date();
+    return now.toLocaleString('ko-KR');
+  }
+
+  function displayWeather(data, cityName) {
+    const currentTime = getCurrentTime();
+    $('#weatherInfo').html(
+            '<h2 class="text-xl font-semibold mb-4">' + cityName + ' 날씨</h2>' +
+            '<p><strong>현재 시간:</strong> ' + currentTime + '</p>' +
+            '<p><strong>온도:</strong> ' + data.main.temp + '°C</p>' +
+            '<p><strong>습도:</strong> ' + data.main.humidity + '%</p>' +
+            '<p><strong>풍속:</strong> ' + data.wind.speed + ' m/s</p>' +
+            '<p><strong>상태:</strong> ' + data.weather[0].description + '</p>'
+    );
+  }
+</script>
+
+</body>
+</html>
